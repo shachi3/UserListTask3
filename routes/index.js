@@ -1,6 +1,6 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
-
+const QRCode = require('qr-image');
 var express = require("express");
 const passport = require("passport");
 var router = express.Router();
@@ -139,6 +139,27 @@ router.get('/export/pdf/:aidi', async(req, res) => {
 
         doc.end();
         console.log('PDF file created successfully');
+    } catch (err) {
+        console.error('Failed to fetch user details from MongoDB', err);
+        res.status(500).json({ error: 'Failed to fetch user details from MongoDB' });
+    }
+});
+
+
+
+// qr code
+router.get('/generate-qr/:email', async(req, res) => {
+    try {
+        // const email = req.params.email;
+        const user = await userModel.findOne({ email: req.params.email });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const qrCode = QRCode.image(user.email, { type: 'png' });
+        res.type('png');
+        qrCode.pipe(res);
     } catch (err) {
         console.error('Failed to fetch user details from MongoDB', err);
         res.status(500).json({ error: 'Failed to fetch user details from MongoDB' });
